@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Prediction</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+            color: white;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h2 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            animation: fadeIn 1.5s ease-in-out;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            animation: slideUp 1s ease-in-out;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        input {
+            background: white;
+            color: black;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            font-size: 18px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: none;
+            animation: fadeIn 1.5s ease-in-out;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <h2>📈 Stock Price Prediction</h2>
+    
+    <div class="container">
+        <form id="predictForm">
+            <label>Stock Ticker:</label>
+            <input type="text" name="ticker" placeholder="e.g., AAPL" required>
+            
+            <label>Start Date:</label>
+            <input type="date" name="start_date" required>
+    
+            <label>End Date:</label>
+            <input type="date" name="end_date" required>
+    
+            <button type="submit">Predict</button>
+        </form>
+    </div>
+
+    <div class="loading">⏳ Predicting...</div>
+
+    <h3>Prediction Result:</h3>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById("predictForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            
+            let formData = new FormData(this);
+            let resultDiv = document.getElementById("result");
+            let loadingDiv = document.querySelector(".loading");
+
+            loadingDiv.style.display = "block";
+            resultDiv.style.display = "none";
+
+            fetch("/predict", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingDiv.style.display = "none";
+                resultDiv.style.display = "block";
+
+                if (data.error) {
+                    resultDiv.innerHTML = `<p style="color:red; font-weight:bold;">❌ ${data.error}</p>`;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p><b>Stock:</b> ${data.ticker}</p>
+                        <p><b>Current Price:</b> ${data.current_price.includes('$') || data.current_price.includes('₹') ? data.current_price : '$' + data.current_price}</p>
+                        <p><b>Predicted Price (30 days):</b> ${data.predicted_price.includes('$') || data.predicted_price.includes('₹') ? data.predicted_price : '$' + data.predicted_price}</p>
+                        <p><b>Expected Trend:</b> ${data.trend}</p>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.log("Error:", error);
+                loadingDiv.style.display = "none";
+            });
+        });
+    </script>
+</body>
+</html>
